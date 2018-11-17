@@ -1,0 +1,2 @@
+class FindHandModel(object):
+	
