@@ -1,0 +1,2 @@
+class TranslateHandModel(object):
+	
