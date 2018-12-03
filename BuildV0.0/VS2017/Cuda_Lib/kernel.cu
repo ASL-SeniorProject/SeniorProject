@@ -1,8 +1,12 @@
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include <time.h>
 
 #include <stdio.h>
+#include <stdlib.h>
+//#include <atlimage.h>
+
 
 enum color_transform_t
 {
@@ -16,86 +20,132 @@ enum transform_t
 	Gaussian
 };
 
-typedef struct rgb_t
-{
-	float r;
-	float g;
-	float b;
-};
+#define SIZE 1000
 
-cudaError_t transform(rgb_t *image[100][100], unsigned int line,  color_transform_t type);
-cudaError_t transform(rgb_t *image[100][100], unsigned int line,  transform_t type);
+cudaError_t transform(uchar3 *dst_img, uchar3 *src_img, int img_size, int block_size, int grid_size, color_transform_t type);
+cudaError_t transform();
 
 // convert one scanline to grayscale in parallel
-__global__ void grayscale_transform(rgb_t **scanline, unsigned int line)
+__global__ void grayscale_transform(uchar3 *dst_img, uchar3 *src_img, int img_size)
 {
-	int j = threadIdx.x;
-	rgb_t *gpu_rgb = scanline[j];
+	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned int idx = y * SIZE + x;
 
-	gpu_rgb->r /= 255.0;
-	gpu_rgb->g /= 255.0;
-	gpu_rgb->b /= 255.0;
+	uchar3 rgb = src_img[idx];
+	int average = (rgb.x + rgb.y + rgb.z) / 3;
+
+	dst_img[idx].x = average;
+	dst_img[idx].y = average;
+	dst_img[idx].z = average;
+}
+
+void host_grayscale(uchar3 *dst_img, uchar3 *src_img, int img_size)
+{
+	for (int i = 0; i < SIZE * SIZE; i++)
+	{
+		uchar3 rgb = src_img[i];
+		int average = (rgb.x + rgb.y + rgb.z) / 3;
+		dst_img[i].x = average;
+		dst_img[i].y = average;
+		dst_img[i].z = average;
+	}
 }
 
 int main()
 {
 	// genreate a dummy image
-	rgb_t *test_img[100][100];
-	int line = 100 * sizeof(rgb_t *);
+	int size = SIZE * SIZE;
+	int img_size = size * sizeof(uchar3);
 
-	int i, j;
-	for (i = 0; i < 100; i++)
-		for (j = 0; j < 100; j++)
-		{
-			rgb_t *rgb = test_img[i][j];
-			rgb->r = 128.0;
-			rgb->g = 76;
-			rgb->b = 256.0;
-		}
+	// So GPU Programming is somewhat different than regular programming
+	// or regular concurrent programming for that matter. 
+	// With the GPU, we have to imagine the hardware as such:
+	//		The GPU contains 
+	int block_size = size / SIZE;
+	int grid_size = size / block_size;
 
-	cudaError_t cudaStatus = transform(test_img, line, grayscale);
-	if (cudaStatus != cudaSuccess) 
+	//CImage img;
+	uchar3 *src_img, *gray_img, srgb;
+
+	src_img = (uchar3*)malloc(img_size);
+	gray_img = (uchar3*)malloc(img_size);
+
+	for (int i = 0; i < SIZE * SIZE; i++)
 	{
-	    fprintf(stderr, "addWithCuda failed!");
-	    return 1;
+		uchar3 src, gray;
+		
+		src.x = 128;
+		src.y = 64;
+		src.x = 256;
+
+		gray.x = 0;
+		gray.y = 0;
+		gray.z = 0;
+
+		src_img[i] = src;
+		gray_img[i] = gray;
 	}
 
+	cudaError_t cudaStatus = transform(gray_img, src_img, img_size, block_size, grid_size, grayscale);
+	if (cudaStatus != cudaSuccess) 
+	{
+		fprintf(stderr, "addWithCuda failed!");
+		return 1;
+	}
 	cudaStatus = cudaDeviceReset();
 	if (cudaStatus != cudaSuccess)
 	{
 	    fprintf(stderr, "cudadevicereset failed!");
 	    return 1;
 	}
+
+	clock_t begin = clock();
+	host_grayscale(gray_img, src_img, img_size);
+	clock_t end = clock();
+	double time_spent = 1000 * (double)(end - begin) / CLOCKS_PER_SEC;
+	printf("CPU Execution Time: %32fms", time_spent);
+	
+	free(gray_img);
+	free(src_img);
+		
+	return 0;
+	system("pause");
 	
 	return 0;
+	system("pause");
 }
 
 // transform an image
-cudaError_t transform(rgb_t *image[100][100], unsigned int line, color_transform_t type)
+cudaError_t transform(uchar3 *dst_img, uchar3 *src_img, int img_size, int block_size, int grid_size, color_transform_t type)
 {
-	int i = threadIdx.y;
-	rgb_t **scanline = image[i];
-	rgb_t *gpu_scanline;
-	rgb_t **gray_scanline;
-
 	cudaError_t cudaStatus;
+	uchar3 *t_src, *gpu_output;
 
-	cudaStatus = cudaMalloc((void**)&gpu_scanline, line);
+	cudaStatus = cudaMalloc((void**)&t_src, img_size);
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaMalloc failed!");
 
-	cudaStatus = cudaMalloc((void**)&gray_scanline, line);
+	cudaStatus = cudaMalloc((void**)&gpu_output, img_size);
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaMalloc failed!");
 
-	cudaStatus = cudaMemcpy(gpu_scanline, scanline, line, cudaMemcpyHostToDevice);
+	cudaStatus = cudaMemcpy(t_src, src_img, img_size, cudaMemcpyHostToDevice);
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaMemcpy failed!");
 
+	float et;
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start);
 	if (type == grayscale)
-		grayscale_transform<<<1, line>>>(gpu_scanline, line);
-
-	// Check for any errors launching the kernel
+		grayscale_transform<<<grid_size, block_size>>>(gpu_output, t_src, img_size);
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&et, start, stop);
+	printf("GPU Execution Time: %32fms\n", et);
+	//// Check for any errors launching the kernel
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess)
         fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
@@ -106,10 +156,12 @@ cudaError_t transform(rgb_t *image[100][100], unsigned int line, color_transform
     if (cudaStatus != cudaSuccess)
         fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
 
-    // Copy output vector from GPU buffer to host memory.
-    cudaStatus = cudaMemcpy(gray_scanline, gpu_scanline, line, cudaMemcpyDeviceToHost);
+    //// Copy output vector from GPU buffer to host memory.
+    cudaStatus = cudaMemcpy(dst_img, gpu_output, img_size, cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess)
         fprintf(stderr, "cudaMemcpy failed!");
+
+	return cudaStatus;
 }
 
 /// HERE IS A WORKING EXAMPLE
