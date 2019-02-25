@@ -1,63 +1,32 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta content="stuff, to, help, search, engines, not" name="keywords">
-<meta content="What this page is about." name="description">
-<meta content="Display Webcam Stream" name="title">
-<title>Display Webcam Stream</title>
-  
-<style>
-#container {
-    margin: 0px auto;
-    width: 500px;
-    height: 375px;
-    border: 10px #333 solid;
-}
-#videoElement {
-    width: 500px;
-    height: 375px;
-    background-color: #666;
-}
-.center{ 
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 10%;
-    padding-bottom: 2%;
-}
-#button{
-    margin-top: 10px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Unity ASL</title>
 
-}
-</style>
-</head>
-  
-<body>
-    <h1 align="center">UNITY ASL</h1>
-    <img src="UnityInASL.png" alt="Unity ASL" class="center">
-    <div id="container">
-        <video autoplay="true" id="videoElement">
+        <link rel="stylesheet" href="css/main.css">
+    </head>
+    <body>
+        <h1>ASL Translation Portal</h1>
+        <img class="TeamLogo" src="images/UnityInASL.png" alt="Unity ASL">
         
-        </video>
-    </div>
-    <button id="button" type="button">Click to stream webcam</button>
-<script>
-    
-    var video = document.querySelector("#videoElement");
-    
-    if (navigator.mediaDevices.getUserMedia) {       
-        navigator.mediaDevices.getUserMedia({video: true})
-    .then(function(stream) {
-        video.srcObject = stream;
-    })
-    .catch(function(error) {
-        console.log("Something went wrong!");
-    });
-    }
-</script>
-</body>
+        <div class="row">
+            <div class="column">
+                <div class="booth">
+                    <video id="video" width="400" height="300"></video>
+                    <a href="#" id="capture" class="booth-capture-button">Take photo</a>
+                    <canvas id="canvas" width="400" height="300"></canvas>
+                    <img id="photo" src="http://placekitten.com/g/400/300" alt="Photo of you">
+                </div>
+                <script src="js/photo.js"></script>
+            </div>
+            <div class="column">
+                <div class="textwrapper">
+                        <textarea rows="44" cols="50">Place holder text for now!</textarea>
+                </div>
+                    
+            </div>
+        </div>
+        
+    </body>
 </html>

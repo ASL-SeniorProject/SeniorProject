@@ -1,0 +1,56 @@
+.booth {
+
+    background-color:#ccc;
+    border:10px solid #ddd;
+    margin: 0 auto;
+}
+
+.column {
+    float:left;
+    padding-right: 5%;
+    padding-left: 5%;
+    width:40%;
+}
+
+.row:after {
+
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.booth-capture-button {
+    display:block;
+    margin: 10px 0;
+    padding:10px, 20px;
+    background-color: cornflowerblue;
+    color:#fff;
+    text-align: center;
+    text-decoration: none;
+}
+
+#canvas {
+    display:none;
+}
+
+h1{
+    text-align:center;
+}
+
+#textarea{
+    width:100%;
+}
+
+#photo{
+    display:block;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.TeamLogo {
+    display: block;
+    margin-left:auto;
+    margin-right:auto;
+    width:10%;
+    padding-bottom: 10px;
+}
