@@ -55,6 +55,8 @@ class Command(object):
 		os.chdir("..")
 		os.chdir(openpose_dir)
 		os.system(cmd)
+		os.chdir("..")
+		os.chdir("openasl/")
 
 if __name__ == "__main__":
 	f_io = FileIO(IMG_PATH, ".")
@@ -63,4 +65,6 @@ if __name__ == "__main__":
 	img = imgs[0]
 	cmd = Command()
 	cmd.image_to_json(img_path=img, view="--view", img_out=".")
+
+	json_data = f_io.read_json_as_list()
 		

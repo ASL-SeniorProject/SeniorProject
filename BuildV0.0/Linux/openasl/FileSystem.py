@@ -1,6 +1,10 @@
 import os, sys
 
-parent = "../" + os.getcwd()
+from pathlib import Path
+
+import json
+import simplejson
+
 cwd = os.getcwd()
 
 class FileIO(object):
@@ -15,12 +19,27 @@ class FileIO(object):
 		if path is None and self.input_dir is not None:
 			path = self.input_dir
 
-		print(path)
-
 		for root, dirs, files in os.walk(cwd + path):
 			for filename in files:
 				imgs.append(filename)
 		return imgs
+
+	# goes into json directory and reads
+	def read_json_as_list(self, path=None):
+		if path is None:
+			path = str(Path(cwd).parent) + "/openasl/json_output/"
+
+		print(path)
+		json_data = []
+		for root, dirs, files in os.walk(path):
+			print(root)
+			for f in files:
+				f_r = open(path + f, "r")
+				j_data = f_r.read()
+				#j_data = json.loads(path + f)
+				json_data.append(j_data)
+
+		return json_data
 
 	def read_video_to_json(self, file_path):
 		pass
