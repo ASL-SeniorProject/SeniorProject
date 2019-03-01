@@ -1,8 +1,22 @@
 .booth {
-    width:400px;
+
     background-color:#ccc;
     border:10px solid #ddd;
     margin: 0 auto;
+}
+
+.column {
+    float:left;
+    padding-right: 5%;
+    padding-left: 5%;
+    width:40%;
+}
+
+.row:after {
+
+    content: "";
+    display: table;
+    clear: both;
 }
 
 .booth-capture-button {
@@ -19,13 +33,24 @@
     display:none;
 }
 
-h1 {
-    text-align: center;
+h1{
+    text-align:center;
+}
+
+#textarea{
+    width:100%;
+}
+
+#photo{
+    display:block;
+    margin-left:auto;
+    margin-right:auto;
 }
 
 .TeamLogo {
     display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 10%;
+    margin-left:auto;
+    margin-right:auto;
+    width:10%;
+    padding-bottom: 10px;
 }

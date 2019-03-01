@@ -2,19 +2,32 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>UNITY ASL</title>
+        <title>Unity ASL</title>
 
         <link rel="stylesheet" href="css/main.css">
     </head>
     <body>
         <h1>ASL Translation Portal</h1>
         <img class="TeamLogo" src="images/UnityInASL.png" alt="Unity ASL">
-        <div class="booth">
-            <video id="video" width="400" height="300"></video>
-            <a href="#" id="capture" class="booth-capture-button">Take photo</a>
-            <canvas id="canvas" width="400" height="300"></canvas>
-            <img id="photo" src="http://placekitten.com/g/400/300" alt="Photo of you">
+        
+        <div class="row">
+            <div class="column">
+                <div class="booth">
+                    <video id="video" width="400" height="300"></video>
+                    <a href="#" id="capture" class="booth-capture-button">Take photo</a>
+                    <canvas id="canvas" width="400" height="300"></canvas>
+                    <img id="photo" src="http://placekitten.com/g/400/300" alt="Photo of you">
+                </div>
+                <script src="js/photo.js"></script>
+            </div>
+            <div class="column">
+                <div class="textwrapper">
+                        <textarea rows="44" cols="50">Place holder text for now!</textarea>
+                </div>
+                    
+            </div>
         </div>
-        <script src="js/photo.js"></script>
+        
     </body>
+
 </html>
