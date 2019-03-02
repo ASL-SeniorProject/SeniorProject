@@ -1,3 +1,5 @@
+from sklearn.svm import SVC
+
 class ASLAlphabetInterpreter(object):
 	def __init__(self):
 		self.workingDir = ""
