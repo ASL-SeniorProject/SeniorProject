@@ -6,7 +6,7 @@ parent = "/../"
 		
 cmd = "./"
 #openpose_dir = "/../openpose/"
-openpose_dir = "openpose/"
+openpose_dir = "/openpose/"
 openpose_exe = cmd + "build/examples/openpose/openpose.bin"
 
 hand = "--hand"
