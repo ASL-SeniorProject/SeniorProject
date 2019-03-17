@@ -23,6 +23,7 @@ class NeuralNetwork:
 		else:
 			self.weights = (2 * np.random.random_sample((layers, weightLength)) - 1) * 0.25
 
+
 	def train(self, X, y, iterations=10000):
 		for i in range(iteration):
 			
@@ -34,6 +35,7 @@ class NeuralNetwork:
 			temp[0:-1] = a
 			a = hyperbolicTan(np.dot(temp, self.weights[l]))
 		return a
+
 	
 	def load(self):
 		f = open("./" + self.name, "r")
@@ -42,6 +44,8 @@ class NeuralNetwork:
 			self.weights.append(tempLayers[i].split(" "))
 		self.layers = len(self.weights)
 		self.weightLength = len(self.weights[0])
+
+
 	def save(self):
 		output = ""
 		for i in range(len(self.weights)):

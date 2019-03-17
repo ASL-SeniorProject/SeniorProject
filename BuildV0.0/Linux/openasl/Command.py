@@ -27,7 +27,7 @@ HAND_VIDEO = "video"
 #IMG_PATH = "../images/tmp/"
 IMG_PATH = "/images/tmp/"
 
-
+INITIAL_SET = "/images/initial_set/"
 
 class Command(object):
 
@@ -41,7 +41,7 @@ class Command(object):
 		args = []
 		if option == HAND_IMG:
 			#args = [image, str(os.getcwd() + IMG_PATH), json, str(os.getcwd() + JSON_OUT), hand, "--display 0", "--render_pose 0"]	
-			args = [image, str(os.getcwd() + IMG_PATH), json, str(os.getcwd() + JSON_OUT), hand, "--display 0", "--render_pose 0"]	
+			args = [image, str(os.getcwd() + INITIAL_SET), json, str(os.getcwd() + JSON_OUT), hand, "--hand_detector 2 --hand_scale_number 6 --hand_scale_range 0.4"]	
 			
 
 		self.run(openpose_exe, "--view", args)
