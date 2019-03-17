@@ -72,6 +72,9 @@ void printKeypoints(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>
     }
 }
 
+//======================================================================================================
+///					ADDED FUNCTIONALITY
+//======================================================================================================
 void output_keypoints_to_file(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>> &datumsPtr)
 {
 	std::string out_json = "../openasl/json_output/json_info.txt";
@@ -89,6 +92,9 @@ void output_keypoints_to_file(const std::shared_ptr<std::vector<std::shared_ptr<
 	json_f << fin_out;
 	json_f.close();
 }
+//======================================================================================================
+///					END ADDED FUNCTIONALITY
+//======================================================================================================
 
 void configureWrapper(op::Wrapper& opWrapper)
 {
@@ -198,6 +204,10 @@ int tutorialApiCpp()
         op::log("Starting thread(s)...", op::Priority::High);
         opWrapper.start();
 
+
+	//================================================================================
+	///				ADDED FUNCTIONALITY
+	//================================================================================
         // Read image and hand rectangle locations
 	std::vector<cv::Mat> imgs;
 	for(const auto & entry : fs::directory_iterator(FLAGS_image_path))
@@ -268,6 +278,10 @@ i/        };*/
             else
                 op::log("Image could not be processed.", op::Priority::High);
 	}
+
+	//================================================================================================
+	///					END ADDED FUNCTIONALITY
+	//================================================================================================
 
         // Info
         op::log("NOTE: In addition with the user flags, this demo has auto-selected the following flags:\n"
