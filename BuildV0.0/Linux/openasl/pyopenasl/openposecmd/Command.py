@@ -1,6 +1,6 @@
 import os, sys
 
-from FileSystem import FileIO
+from openasl_io import FileSystem
 
 parent = "/../"
 		
@@ -70,7 +70,7 @@ class Command(object):
 
 
 if __name__ == "__main__":
-	f_io = FileIO(IMG_PATH, ".")
+	f_io = FileSystem.FileIO(IMG_PATH, ".")
 	imgs = f_io.read_image_strings()
 
 	img = imgs[0]

@@ -1,6 +1,8 @@
 import numpy as np
 import sys
 
+from openposecmd import Command
+
 def sigmoid(x):
     return 1.0/(1+ np.exp(-x))
 
@@ -25,8 +27,8 @@ class NeuralNetwork:
 
 
 	def train(self, X, y, iterations=10000):
-		for i in range(iteration):
-			
+		#for i in range(iteration):
+		pass	
 
 	def predict(self, x):
 		a = np.array(x)
