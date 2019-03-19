@@ -1,13 +1,14 @@
 import os, sys
 
 from FileSystem import FileIO
+from pyopenasl import neuralnet as nn
 
 parent = "/../"
 		
 cmd = "./"
 #openpose_dir = "/../openpose/"
 openpose_dir = "openpose/"
-openpose_exe = cmd + "build/examples/openpose/openpose.bin"
+openpose_exe = cmd + "build/examples/tutorial_api_cpp/07_hand_from_image.bin"
 
 hand = "--hand"
 face = "--face"
@@ -41,10 +42,11 @@ class Command(object):
 		args = []
 		if option == HAND_IMG:
 			#args = [image, str(os.getcwd() + IMG_PATH), json, str(os.getcwd() + JSON_OUT), hand, "--display 0", "--render_pose 0"]	
-			args = [image, str(os.getcwd() + INITIAL_SET), json, str(os.getcwd() + JSON_OUT), hand, "--hand_detector 2 --hand_scale_number 6 --hand_scale_range 0.4"]	
-			
+			#args = [image, str(os.getcwd() + INITIAL_SET), json, str(os.getcwd() + JSON_OUT), hand, "--hand_detector 2 --hand_scale_number 6 --hand_scale_range 0.4"]	
+			pass
 
-		self.run(openpose_exe, "--view", args)
+		#self.run(openpose_exe, "--view", args)
+		self.run(openpose_exe)
 		
 	# execute the command
 	def run(self, cmd=None, view=None, *opts):
@@ -52,7 +54,7 @@ class Command(object):
 			self.cmd = cmd
 			self.options = opts
 
-		c = opts[0]
+		c = self.options
 		for cc in c:
 			cmd = cmd + " " + str(cc)
 
