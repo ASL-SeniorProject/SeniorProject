@@ -30,7 +30,7 @@ class NeuralNetwork:
 			self.biases = [np.random.randn(y, 1) for y in layers[1:]]
 			self.weights = [np.random.randn(y, x) for x, y in zip(layers[:-1], layers[1:])]
 	
-	def feedForward(self, x):
+	def feedForward(self, a):
 		for b, w in zip(self.biases, self.weights):
 			a = self.activationFunc(np.dot(w, a) + b)
 		return a
@@ -74,16 +74,18 @@ class NeuralNetwork:
 				print(str(i) + " iterations complete")
 
 	def predict(self, test_data):
-		test_results = [(np.argmax(self.feedforward(x)), y) for (x, y) in test_data]
-		return sum(int(x == y) for (x, y) in test_results)
+		#test_results = [(np.argmax(self.feedforward(x)), y) for (x, y) in test_data]
+		#return sum(int(x == y) for (x, y) in test_results)
+		print(self.weights)
+		return self.feedForward(test_data)
 	
 	def load(self):
 		f = gzip.open("./" + self.name + ".pkl.gz", "rb")
-		self.weights, self.biases = cPickle.load(f)
+		self.weights, self.biases = pickle.load(f)
 		f.close()
 	def save(self):
 		f = gzip.open("./" + self.name + ".pkl.gz", "w")
-		cPickle.dump((self.weights, self.biases), f)
+		pickle.dump((self.weights, self.biases), f)
 		f.close()
 
 if __name__ == "__main__":
@@ -99,4 +101,4 @@ if __name__ == "__main__":
 	nn = NeuralNetwork(load=True)
 	
 	for i in [[0,0], [0,1], [1,0], [1,1]]:
-		print(i, nn.predict(i))
+		print(i, nn.predict([i]))
