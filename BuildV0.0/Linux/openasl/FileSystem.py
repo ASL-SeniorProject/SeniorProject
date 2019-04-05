@@ -50,22 +50,8 @@ class OpenPoseIO(object):
 
 	# populate training data
 	def populate_training_data(self):
-		"""for root, dirs, filenames in os.walk(TRAINING):
-			for d in dirs:
-				letter_in = TRAINING + str(d) + "/"
-				letter_out = TRAIN_OUT + str(d) + "/"
-				try:
-					if not os.path.isdir(letter_out):
-						os.mkdir(letter_out)
-				except OSError as e:
-					pass"""
+		self.cmd.image_to_json(img_path=TRAINING, img_out=TRAIN_OUT)
 
-		self.cmd.image_to_json(img_path=TESTING, img_out=TEST_OUT)
-	# populate testing data 
-	#    get image string list in directory
-	#    get size of list
-	#    pop off 1/4 values
-	#    this is test images for one letter
 if __name__ == "__main__":
 	openpose_io = OpenPoseIO()
 	openpose_io.populate_training_data()
