@@ -19,7 +19,9 @@ namespace fs = std::experimental::filesystem;
 
 // Custom OpenPose flags
 // Producer
-DEFINE_string(image_path, "../openasl/images/initial_set/",
+//DEFINE_string(image_path, "../openasl/images/asl_images/asl_alphabet_train/",
+//    "Process an image. Read all standard formats (jpg, png, bmp, etc.).");
+DEFINE_string(image_path, "../openasl/images/asl_images/asl_alphabet_test/",
     "Process an image. Read all standard formats (jpg, png, bmp, etc.).");
 
 //DEFINE_string(image_path, "examples/media/COCO_val2014_000000000241.jpg",
@@ -72,15 +74,22 @@ void printKeypoints(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>
     }
 }
 
-//======================================================================================================
-///					ADDED FUNCTIONALITY
-//======================================================================================================
-void output_keypoints_to_file(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>> &datumsPtr)
+void output_keypoints_to_file(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>> &datumsPtr, 
+											     std::string outdir)
 {
-	std::string out_json = "../openasl/json_output/json_info.txt";
+	// loop over each subdirectory
+	char dir = outdir.at(0);
+	std::string top_dir = "../openasl/json_output/testing/";
+	//std::string top_dir = "../openasl/json_output/training/";
+	std::string fout = top_dir + dir + "/";
 
+	outdir = outdir + ".txt";
+	fout = fout + outdir;
 	std::ofstream json_f;
-	json_f.open(out_json, std::ios::app);
+	json_f.open(fout.c_str(), std::ios::out);
+
+	if(!json_f.is_open())
+		std::cout << "ERROR!" << std::endl;
 
 	std::string left, right;
 	
@@ -92,9 +101,20 @@ void output_keypoints_to_file(const std::shared_ptr<std::vector<std::shared_ptr<
 	json_f << fin_out;
 	json_f.close();
 }
-//======================================================================================================
-///					END ADDED FUNCTIONALITY
-//======================================================================================================
+
+void set_mat_str_data(std::vector<cv::Mat> &mats, std::vector<std::string> &names, std::string dir)
+{
+	for(const auto &entry : fs::directory_iterator(dir))
+	{
+		std::string fname = entry.path().filename();
+		fname.assign(fname.substr(0, fname.size() - 4));
+		names.push_back(fname);
+		std::cout << entry.path() << std::endl;	
+		cv::Mat t = cv::imread(entry.path());
+		if(!t.empty())
+			mats.push_back(t);
+	}
+}
 
 void configureWrapper(op::Wrapper& opWrapper)
 {
@@ -183,7 +203,7 @@ void configureWrapper(op::Wrapper& opWrapper)
     }
 }
 
-int tutorialApiCpp()
+int tutorialApiCpp(std::string in, std::string out)
 {
     try
     {
@@ -204,24 +224,74 @@ int tutorialApiCpp()
         op::log("Starting thread(s)...", op::Priority::High);
         opWrapper.start();
 
-
-	//================================================================================
-	///				ADDED FUNCTIONALITY
-	//================================================================================
         // Read image and hand rectangle locations
-	std::vector<cv::Mat> imgs;
-	for(const auto & entry : fs::directory_iterator(FLAGS_image_path))
+	std::cout << "Dir to work on: " << FLAGS_image_path << std::endl;
+	// for all letters
+	for(const auto & entry : fs::directory_iterator(in))
 	{
+		
+		std::vector<cv::Mat> imgs;
+		std::vector<std::string> names;
+		std::string fname = entry.path();
 		std::cout << entry.path() << std::endl;
-		imgs.push_back(cv::imread(entry.path()));
+
+		if(fname.find("nothing") != std::string::npos || fname.find("del") != std::string::npos || 
+		   fname.find("space") != std::string::npos)
+			continue;
+
+		set_mat_str_data(imgs, names, fname);
+
+		// gather hand-rectangle data
+		std::vector<std::vector<std::array<op::Rectangle<float>, 2>>> handRectangles;
+		for(auto & m : imgs)
+		{
+			float w = m.cols;
+			float h = m.rows;
+			float x = w / 2;
+			float y = h / 2;
+			std::array<op::Rectangle<float>, 2> hand_rects {
+				op::Rectangle<float>{0.f, 0.f, 0.f, 0.f},
+				op::Rectangle<float>{x, y, w, h}
+			};
+			std::vector<std::array<op::Rectangle<float>, 2>> HR;
+			HR.push_back(hand_rects);
+			handRectangles.push_back(HR);
+		}
+
+		auto datumsPtr = std::make_shared<std::vector<std::shared_ptr<op::Datum>>>();
+        	datumsPtr->emplace_back();
+        	auto& datumPtr = datumsPtr->at(0);
+       		datumPtr = std::make_shared<op::Datum>();
+
+		// for each image matrix in each letter folder
+		for(int i = 0; i < handRectangles.size(); i++)
+		{
+	    		auto rect = handRectangles.at(i);
+	    		auto img = imgs.at(i);
+	    		auto fname = names.at(i);
+
+			auto dir = fname.at(0);
+
+            		// Fill datum with image and handRectangles
+            		datumPtr->cvInputData = img;
+            		datumPtr->handRectangles = rect;
+
+            		// Process and display image
+            		opWrapper.emplaceAndPop(datumsPtr);
+            		if (datumsPtr != nullptr)
+				output_keypoints_to_file(datumsPtr, fname);
+            		else
+                		op::log("Image could not be processed.", op::Priority::High);
+		}
+
 	}
 
-	std::cout << "Number of Images in Vector: " << imgs.size() << std::endl;
-	std::vector<std::vector<std::array<op::Rectangle<float>, 2>>> handRectangles;
+	//std::cout << "Number of Images in Vector: " << imgs.size() << std::endl;
+	/*std::vector<std::vector<std::array<op::Rectangle<float>, 2>>> handRectangles;
 	for(auto & m : imgs)
 	{
-		float w = m.cols;
-		float h = m.rows;
+		float w = m->cols;
+		float h = m->rows;
 		float x = w / 2;
 		float y = h / 2;
 		std::array<op::Rectangle<float>, 2> hand_rects {
@@ -233,9 +303,9 @@ int tutorialApiCpp()
 		handRectangles.push_back(HR);
 	}
 
-	std::cout << "Number of rectangle vectors: " << handRectangles.size() << std::endl;
+	//std::cout << "Number of rectangle vectors: " << handRectangles.size() << std::endl;
         //nst auto imageToProcess = cv::imread(FLAGS_image_path);
-/*        const std::vector<std::array<op::Rectangle<float>, 2>> handRectangles{
+        const std::vector<std::array<op::Rectangle<float>, 2>> handRectangles{
             // Left/Right hands of person 0
 	    // we only ever need to keep track of one hand for right now. Uncomment for multiple.
             std::array<op::Rectangle<float>, 2>{
@@ -252,7 +322,7 @@ int tutorialApiCpp()
 i/        };*/
 
         // Create new datum
-        auto datumsPtr = std::make_shared<std::vector<std::shared_ptr<op::Datum>>>();
+        /*auto datumsPtr = std::make_shared<std::vector<std::shared_ptr<op::Datum>>>();
         datumsPtr->emplace_back();
         auto& datumPtr = datumsPtr->at(0);
         datumPtr = std::make_shared<op::Datum>();
@@ -261,6 +331,7 @@ i/        };*/
 	{
 	    auto rect = handRectangles.at(i);
 	    auto img = imgs.at(i);
+	    auto fname = names.at(i);
 
             // Fill datum with image and handRectangles
             datumPtr->cvInputData = img;
@@ -270,18 +341,14 @@ i/        };*/
             opWrapper.emplaceAndPop(datumsPtr);
             if (datumsPtr != nullptr)
             {
-                printKeypoints(datumsPtr);
-		output_keypoints_to_file(datumsPtr);
+                //printKeypoints(datumsPtr);
+		output_keypoints_to_file(datumsPtr, out);
                 //if (!FLAGS_no_display)
                 //    display(datumsPtr);
             }
             else
                 op::log("Image could not be processed.", op::Priority::High);
-	}
-
-	//================================================================================================
-	///					END ADDED FUNCTIONALITY
-	//================================================================================================
+	}*/
 
         // Info
         op::log("NOTE: In addition with the user flags, this demo has auto-selected the following flags:\n"
@@ -304,6 +371,14 @@ int main(int argc, char *argv[])
     // Parsing command line flags
     gflags::ParseCommandLineFlags(&argc, &argv, true);
 
+    std::string arg1(argv[1]), arg2(argv[2]);
+
+    arg1 = arg1.substr(1, arg1.size() - 2);
+    arg2 = arg2.substr(1, arg2.size() - 2);
+
+    std::cout << "arg1: " << arg1 << std::endl;
+    std::cout << "arg2: " << arg2 << std::endl;
+
     // Running tutorialApiCpp
-    return tutorialApiCpp();
+    return tutorialApiCpp(arg1, arg2);
 }
