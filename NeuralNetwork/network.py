@@ -55,6 +55,7 @@ class Network(object):
         if test_data: n_test = len(test_data)
         n = len(training_data)
         for j in range(epochs):
+            print("Training iteration " + str(j))
             random.shuffle(training_data)
             mini_batches = [
                 training_data[k:k+mini_batch_size]
