@@ -24,8 +24,8 @@
   
   document.getElementById('capture').addEventListener('click', function() {
     context.drawImage(video, 0, 0, 352, 228);
-    photo.setAttribute('src', canvas.toDataURL('image/png'));
-    var data = canvas.toDataURL('image/png')
+    photo.setAttribute('src', canvas.toDataURL('image/jpg'));
+    var data = canvas.toDataURL('image/jpg')
 
     data = data.substring(22, data.length)
     var xhttp = new XMLHttpRequest();
