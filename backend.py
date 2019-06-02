@@ -42,7 +42,7 @@ def calibrate():
 	binary_data = a2b_base64(data)
 	
 	global numCalibrated
-	fd = open(letters[int(math.floor(numCalibrated / 20))] + "_" + str(numCalibrated % 20) + ".jpg", 'wb')
+	fd = open(letters[int(math.floor(numCalibrated / 20))] + str(numCalibrated % 20) + ".jpg", 'wb')
 	numCalibrated += 1
 
 	fd.write(binary_data)

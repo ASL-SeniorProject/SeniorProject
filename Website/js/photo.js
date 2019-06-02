@@ -29,16 +29,16 @@
 
     data = data.substring(22, data.length)
     var xhttp = new XMLHttpRequest();
-    var url = "http://localhost:5010/processImage/"
+    var url = "http://localhost:5000/processImage/"
 
-    var theUrl = "http://68.80.81.129:5010/addLetter/ Ok"
+    var theUrl = "http://localhost:5000/addLetter/ Ok"
 
     
     var data = {"image":data}
 $.ajax({
     type: 'POST',
     contentType: 'application/json',
-    url: 'http:68.80.81.129:5010/processImage',
+    url: 'http:localhost:5000/processImage',
     dataType : 'json',
     data : JSON.stringify(data),
     success : function(result) {
@@ -78,31 +78,31 @@ $.ajax({
 
   
   document.getElementById('calibrate').addEventListener('click', function() {
-    context.drawImage(video, 0, 0, 352, 228);
-    photo.setAttribute('src', canvas.toDataURL('image/jpg'));
-    var data = canvas.toDataURL('image/jpg')
+	for (var i = 0; i < 520; i++){
+		context.drawImage(video, 0, 0, 352, 228);
+		photo.setAttribute('src', canvas.toDataURL('image/jpg'));
+		var data = canvas.toDataURL('image/jpg')
 
-    data = data.substring(22, data.length)
-    var xhttp = new XMLHttpRequest();
-    var url = "http://localhost:5010/calibrate/"
+		data = data.substring(22, data.length)
+		var xhttp = new XMLHttpRequest();
+		var url = "http://localhost:5000/calibrate/"
 
-    var theUrl = "http://68.80.81.129:5010/addLetter/ Ok"
-
-    
-    var data = {"image":data}
-$.ajax({
-    type: 'POST',
-    contentType: 'application/json',
-    url: 'http:68.80.81.129:5010/calibrate',
-    dataType : 'json',
-    data : JSON.stringify(data),
-    success : function(result) {
-      jQuery("#clash").html(result); 
-    },error : function(result){
-       console.log(result);
-    }
-});
-    
+		var theUrl = "http://localhost:5000/addLetter/ Ok"
+		
+		var data = {"image":data}
+	$.ajax({
+		type: 'POST',
+		contentType: 'application/json',
+		url: 'http:localhost:5000/calibrate',
+		dataType : 'json',
+		data : JSON.stringify(data),
+		success : function(result) {
+		  jQuery("#clash").html(result); 
+		},error : function(result){
+		   console.log(result);
+		}
+	});
+	}
   });
   
 })();

@@ -3,7 +3,7 @@ function UpdateText() {
     console.log(text)
     function update() {
         $.ajax({
-            url: "http:68.80.81.129:5010/",
+            url: "http:localhost:5000/",
             type: 'GET',
             
             success: function(res) {
