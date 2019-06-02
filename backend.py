@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flask import request
 import string
 import math
+import json
 app = Flask(__name__)
 CORS(app)
 
@@ -47,7 +48,7 @@ def calibrate():
 
 	fd.write(binary_data)
 	fd.close()
-	return "GOOD"
+	return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 	
 	
 
