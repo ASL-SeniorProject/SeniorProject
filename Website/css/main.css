@@ -1,8 +1,12 @@
 .booth {
-    width:400px;
+    width:352px;
     background-color:#ccc;
     border:10px solid #ddd;
     margin: 0 auto;
+}
+
+canvas {
+    align-content: center;
 }
 
 .booth-capture-button {
@@ -28,4 +32,27 @@ h1 {
     margin-left: auto;
     margin-right: auto;
     width: 10%;
+}
+
+.column {
+    float: left;
+    width: 50%;
+    padding: 5px;
+  
+}
+.column2{
+    float: right;
+    padding-right: 100px;
+
+}
+  
+ /* Clear floats after image containers */
+.row::after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+.button{
+    text-align: center;
 }
