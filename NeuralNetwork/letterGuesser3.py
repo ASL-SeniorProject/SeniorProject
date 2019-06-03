@@ -6,7 +6,7 @@
 #
 #             Written By
 #            Nick Jackson
-#             4/12/2019
+#             5/15/2019
 #         
 """
 
@@ -14,12 +14,19 @@
 ###
 ### EDIT LOG
 ###
-### Nick Jackson - 4/13/2019
+### Nick Jackson - 5/15/2019
 ###
 ###
 """
 
+from skimage.io import imread
+from skimage.color import rgb2gray
+from skimage.transform import resize
+from skimage.feature import *
 from sklearn.neural_network import MLPClassifier as NN
+from .multiNetPictureProcess import *
+from .BlobFinder import *
+import numpy as np
 import pickle
 import sys
 import os
@@ -27,22 +34,25 @@ import random
 
 """
 	Global Variables to mess with.
+	Details for variables available in README
 """
 
 # Guesser variables
 guesserConstruction = "new"
-guesserName = "YourCoolGuesser2"
-guesserType = "mono"
+guesserName = "blueBoostNet"
+guesserType = "multi"
 
 # Data range variables
+dataSet = "blueHands"
+dataType = "blueBoost"
 startLetter = 'A'
-endLetter = 'C'
+endLetter = 'Z'
 percentToUse = 100
 
 # Netowrk construction variables
 activationFunction = 'tanh'
-solverAlgorithm = 'lbfgs'
-epochs = 1000
+solverAlgorithm = 'adam'
+epochs = 500
 hiddenLayers = (100,)
 
 """
@@ -74,11 +84,14 @@ class Guesser(object):
 		trainingDataY = []
 		if self.type == "multi":
 			for i in range(len(self.networks)):
+				print("Training network: " + chr(i + ord('A')))
+				trainingDataX = []
+				trainingDataY = []
 				for j in range(int(len(data[i]) * percentToUse/100)):
 					trainingDataX.append(data[i][j])
 					trainingDataY.append(1)
 				if len(self.networks) > 1:
-					for j in range(2000):
+					for j in range(int(len(data[i]) * percentToUse/100) * 4):
 						temp = random.randint(0,ord(endLetter) - ord(startLetter))
 						while temp == i:
 							temp = random.randint(0,ord(endLetter) - ord(startLetter))
@@ -112,46 +125,44 @@ class Guesser(object):
 		pickle.dump(self, open(self.name, "wb"))
 	
 def buildData():
-	arr = []
-	arr2 = []
+	shapeM = np.array([[[0,0,1]]*50]*50)
 	data = []
-	for i in range(ord(endLetter) - ord(startLetter) + 1):
+	for i in range(ord(endLetter)-ord(startLetter)+1):
 		data.append([])
-	recording = False
-
-	for (path, dirs, files) in os.walk('./json_output/training'):
-		if ord(str(path)[-1]) <= ord(endLetter) and ord(str(path)[-1]) >= ord(startLetter):
-			print(str(path))
+	for path, dirs, files in os.walk("./BlueHandAlphabet/Cropped"):
+		if ord(path[-1]) >= ord(startLetter) and ord(path[-1]) <= ord(endLetter):
 			for fname in files:
-				with open(path + '/' + fname, 'r') as f:
-					arr2 = []
-					arr = f.read().strip().split('\n')
-					for i in range(len(arr)):
-						arr[i] = arr[i].split(' ')
-						for element in arr[i]:
-							if recording:
-								try:
-									temp = float(str(element).strip())
-									if temp > 3:
-										arr2.append(temp)
-								except:
-									if element == 'left:':
-										recording = False
-							elif element == 'right:':
-								recording = True
-					for i in range(len(arr2)):
-						if arr2[i] > maxMins[i][0]:
-							maxMins[i][0] = arr2[i]
-						if arr2[i] < maxMins[i][1]:
-							maxMins[i][1] = arr2[i]
-					data[ord(str(path)[-1]) - ord('A')].append(arr2)
-	for i in range(len(data)):
-		for j in range(len(data[i])):
-			for k in range(len(data[i][j])):
-				if maxMins[k][0] == maxMins[k][1]:
-					data[i][j][k] = 0.0
+				if dataType == "xcanny":
+					img = canny(rgb2gray(imread(path + "/" + fname)))
+					img1D = []
+					for i in range(len(img)):
+						for j in range(len(img[i])):
+							img1D.append(img[i][j])
+					data[ord(path[-1]) - ord(startLetter)].append(img1D)
+				elif dataType == "hog":
+					data[ord(path[-1]) - ord(startLetter)].append(hog(rgb2gray(imread(path + "/" + fname))))
+				elif dataType == "canny":
+					img = canny(rgb2gray(imread(path + "/" + fname)))
+					img1D = []
+					for i in range(len(img)):
+						img1D.append(float(np.sum(np.array(img[i])))/float(len(img[i])))
+					data[ord(path[-1]) - ord(startLetter)].append(img1D)
+				elif dataType == "tensor":
+					img1D = []
+					Axx, Axy, Ayy = structure_tensor(rgb2gray(imread(path + "/" + fname)), sigma=0.1)
+					img2D = structure_tensor_eigvals(Axx, Axy, Ayy)[0]
+					for obj in img2D:
+						for el in obj:
+							img1D.append(el)
+					data[ord(path[-1]) - ord(startLetter)].append(img1D)
+				elif dataType == "blueBoost":
+					temp = imread(path + "/" + fname)*shapeM
+					max = np.amax(temp)
+					temp = temp / np.array([[[1,1,float(max)]]*50]*50)
+					data[ord(path[-1]) - ord(startLetter)].append(temp.flatten()[2::3])
 				else:
-					data[i][j][k] = (data[i][j][k] - maxMins[k][1]) / (maxMins[k][0] - maxMins[k][1])
+					print("Invalid data type, exiting")
+					exit()
 	return data
 
 if __name__ == "__main__":
@@ -168,8 +179,10 @@ if __name__ == "__main__":
 	# ---------------------------------------------
 	# Initialize the maxMin arrays and prepare data
 	# ---------------------------------------------
+	"""
 	for i in range(42):
 		maxMins.append([0.0, 10000.0])
+	"""
 	data = buildData()
 	
 	# ---------------------------------------------
@@ -192,6 +205,10 @@ if __name__ == "__main__":
 	# ----------------------------------
 	# Check the accuracy of your network
 	# ----------------------------------
+	
+	for i in range(len(data)):
+		print(chr(i + ord('A')) + ": " + str(g.predict([data[i][i]])))
+	
 	for i in range(len(data)):
 		temp = 0
 		for j in range(len(data[i])):
@@ -200,3 +217,16 @@ if __name__ == "__main__":
 			elif g.type == "multi" and i in g.predict([data[i][j]]):
 				temp += 1
 		print(chr(i + ord('A')) + ": " + str(temp/len(data[i])))
+	"""
+	
+	data = []
+	img = imread("./TestC1.jpg")
+	img = rgb2gray(resize(img, (200,200),anti_aliasing=True))
+	for ent in canny(img):
+		temp = 0
+		for boo in ent:
+			if boo:
+				temp += 1
+		data.append(float(temp)/float(len(ent)))
+	print(g.predict([data]))
+	"""

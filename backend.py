@@ -2,6 +2,11 @@ from flask import Flask
 from binascii import a2b_base64
 from flask_cors import CORS
 from flask import request
+from NeuralNetwork.BatchProcessesImages import *
+from NeuralNetwork.BlobFinder import *
+from NeuralNetwork.letterGuesser3 import * 
+from NeuralNetwork.multiNetPictureProcess import *
+from NeuralNetwork.TrainGloveNet import *
 import string
 import math
 import json
@@ -49,8 +54,6 @@ def calibrate():
 	fd.write(binary_data)
 	fd.close()
 	return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
-	
-	
 
 # POST request used by the front end to send an image to the server
 @app.route('/processImage', methods = ['POST'])
