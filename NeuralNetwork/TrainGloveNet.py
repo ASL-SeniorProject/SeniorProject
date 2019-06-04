@@ -1,16 +1,17 @@
 import numpy as np
 from skimage.io import imread
+from skimage.color import rgba2rgb
 from skimage.segmentation import slic
 from sklearn.neural_network import MLPClassifier as NN
 import random
 import pickle
 
 if __name__ == "__main__":
-	img = imread("./A2.jpg")
+	img = rgba2rgb(imread("./tempImage0.jpg"))
 	labels = slic(img, n_segments=100, compactness=20)
 	net = NN(hidden_layer_sizes=(10,10), activation="tanh", solver="adam", max_iter=500)
 
-	hits = [55]
+	hits = [49, 51, 63]
 	X = []
 	Y = []
 

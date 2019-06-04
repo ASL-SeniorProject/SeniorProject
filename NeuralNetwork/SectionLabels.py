@@ -1,8 +1,9 @@
 from skimage.io import imread, imsave
+from skimage.color import rgba2rgb
 from skimage.segmentation import slic
 import numpy as np
 
-img = imread("./A2.jpg")
+img = rgba2rgb(imread("./tempImage0.jpg"))
 labels = slic(img, n_segments=100, compactness=20)
 
 timg = []
@@ -25,4 +26,4 @@ for x in range(max):
 				timg[i][j] = img[i][j]
 			else:
 				timg[i][j] = [0,0,0]
-	imsave("./DesktopDaySegments/" + str(x) + ".jpg", timg)
+	imsave("./DemoSegments/" + str(x) + ".jpg", timg)

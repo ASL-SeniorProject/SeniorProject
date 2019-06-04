@@ -2,11 +2,14 @@ from flask import Flask
 from binascii import a2b_base64
 from flask_cors import CORS
 from flask import request
+from flask import jsonify
 from NeuralNetwork.BatchProcessesImages import *
 from NeuralNetwork.BlobFinder import *
 from NeuralNetwork.letterGuesser3 import * 
 from NeuralNetwork.multiNetPictureProcess import *
 from NeuralNetwork.TrainGloveNet import *
+from NeuralNetwork.fakeProduction import *
+from subprocess import Popen
 import string
 import math
 import json
@@ -19,6 +22,9 @@ message = ''
 
 global numCalibrated
 numCalibrated = 0
+
+global collection
+collection = []
 
 letters = list(string.ascii_uppercase[:26])
 
@@ -43,6 +49,7 @@ def clear_message():
 
 @app.route('/calibrate', methods = ['POST'])
 def calibrate():
+	"""
 	jsonData=request.get_json()
 	data = jsonData['image']
 	binary_data = a2b_base64(data)
@@ -53,6 +60,8 @@ def calibrate():
 
 	fd.write(binary_data)
 	fd.close()
+	"""
+	blackAndCrop()
 	return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 # POST request used by the front end to send an image to the server
@@ -61,20 +70,34 @@ def process_image():
     jsonData = request.get_json()
     data = jsonData['image']
     binary_data = a2b_base64(data)
-
-    fd = open('image.jpg', 'wb')
+    global numCalibrated
+    fd = open('tempImage' + str(numCalibrated) + '.jpg', 'wb')
+    numCalibrated += 1
     fd.write(binary_data)
     fd.close()
-    
-	#Call predict letter
-	#predictLetter()
-    return "SUCCESS"
+    #Call predict letter
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
+def makeWords(wSoFar, letters):
+    if len(letters) == 0:
+        global collection
+        collection.append(wSoFar)
+        return
+    for c in letters[0]:
+        makeWords(wSoFar + chr(ord('A') + c), letters[1:])
+@app.route('/predict')
 def predictLetter():
 	print("Call Nick's nueral net")
+	guessedLetters = processAndPredict()
+	makeWords('', guessedLetters)
+	global collection
 	print("Add its prediction")
 	print("Process all output with NLP")
-	print("Update message with the new outpu")
-
+	print("Update message with the new output")
+	global message
+	message = ''
+	for w in collection:
+		message += w + " "
+	p = Popen("clean.bat", cwd=r""+os.getcwd())
 if __name__ == '__main__':
-	app.run(host= '0.0.0.0', port=5010)
+	app.run(host= '0.0.0.0', port=5000)

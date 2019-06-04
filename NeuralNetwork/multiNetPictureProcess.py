@@ -1,9 +1,11 @@
 from skimage.io import imread, imsave
 from skimage.feature import blob_log
+from skimage.color import rgba2rgb
 from sklearn.neural_network import MLPClassifier as NN
 import numpy as np
 import pickle
 import threading
+import os
 
 nets = []
 imgs = []
@@ -23,7 +25,8 @@ def predict(index, name, img):
 	print(name + " complete")
 
 def isolateHand(iname, sourcedir, targetdir):
-	img = imread(sourcedir + "/" + iname + ".jpg")
+	#print(os.getcwd())
+	img = rgba2rgb(imread(sourcedir + "/" + iname + ".jpg"))
 	netNames = ["gloveNet", "gloveNet2", "gloveNet3", "gloveNet4", "gloveNet5", "gloveNet6"]
 
 	print("Setting up environment")
@@ -34,7 +37,7 @@ def isolateHand(iname, sourcedir, targetdir):
 		timg = np.array(timg)
 		imgs.append([timg, 0])
 		
-		nets.append(pickle.load(open("./" + netNames[i], "rb")))
+		nets.append(pickle.load(open("./NeuralNetwork/" + netNames[i], "rb")))
 		
 		threads.append(threading.Thread(target=predict, args=(i, "Thread" + str(i), img)))
 
@@ -86,3 +89,5 @@ def isolateHand(iname, sourcedir, targetdir):
 		print("Chosen network: " + netNames[best])
 		imsave(targetdir + "/" + iname + "blacked.jpg", imgs[best][0])
 		return 0
+if __name__ == "__main__":
+	print("Whoops")

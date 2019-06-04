@@ -118,6 +118,21 @@ function testCal(){
   document.getElementById('calibrate').addEventListener('click', function() {
 	testCal();
   });
+  document.getElementById('predict').addEventListener('click', function() {
+	var data = "boogers";
+	$.ajax({
+		type: 'GET',
+		contentType: 'application/json',
+		url: 'http:localhost:5000/predict',
+		dataType : 'json',
+		data : JSON.stringify(data),
+		success : function(result) {
+		  jQuery("#clash").html(result); 
+		},error : function(result){
+		   console.log(result);
+		}
+	});
+  });
   
 })();
 

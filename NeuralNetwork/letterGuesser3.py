@@ -39,12 +39,12 @@ import random
 
 # Guesser variables
 guesserConstruction = "new"
-guesserName = "blueBoostNet"
+guesserName = "all"
 guesserType = "multi"
 
 # Data range variables
 dataSet = "blueHands"
-dataType = "blueBoost"
+dataType = "all"
 startLetter = 'A'
 endLetter = 'Z'
 percentToUse = 100
@@ -79,25 +79,42 @@ class Guesser(object):
 			print("Invalid type")
 			sys.exit(1)
 	
-	def train(self):
+	def train(self, allData=False):
 		trainingDataX = []
 		trainingDataY = []
 		if self.type == "multi":
-			for i in range(len(self.networks)):
-				print("Training network: " + chr(i + ord('A')))
-				trainingDataX = []
-				trainingDataY = []
-				for j in range(int(len(data[i]) * percentToUse/100)):
-					trainingDataX.append(data[i][j])
-					trainingDataY.append(1)
-				if len(self.networks) > 1:
-					for j in range(int(len(data[i]) * percentToUse/100) * 4):
-						temp = random.randint(0,ord(endLetter) - ord(startLetter))
-						while temp == i:
+			if not allData:
+				for i in range(len(self.networks)):
+					print("Training network: " + chr(i + ord('A')))
+					trainingDataX = []
+					trainingDataY = []
+					for j in range(int(len(data[i]) * percentToUse/100)):
+						trainingDataX.append(data[i][j])
+						trainingDataY.append(1)
+					if len(self.networks) > 1:
+						for j in range(int(len(data[i]) * percentToUse/100) * 4):
 							temp = random.randint(0,ord(endLetter) - ord(startLetter))
-						trainingDataX.append(data[temp][random.randint(0,len(data[temp])-1)])
-						trainingDataY.append(0)
-				self.networks[i].fit(trainingDataX, trainingDataY)
+							while temp == i:
+								temp = random.randint(0,ord(endLetter) - ord(startLetter))
+							trainingDataX.append(data[temp][random.randint(0,len(data[temp])-1)])
+							trainingDataY.append(0)
+					self.networks[i].fit(trainingDataX, trainingDataY)
+			else:
+				for i in range(len(self.networks)):
+					print("Training network: " + chr(i + ord('A')))
+					trainingDataX = []
+					trainingDataY = []
+					for j in range(int(len(allData[i]) * percentToUse/100)):
+						trainingDataX.append(allData[i][j])
+						trainingDataY.append(1)
+					if len(self.networks) > 1:
+						for j in range(int(len(allData[i]) * percentToUse/100) * 4):
+							temp = random.randint(0,ord(endLetter) - ord(startLetter))
+							while temp == i:
+								temp = random.randint(0,ord(endLetter) - ord(startLetter))
+							trainingDataX.append(allData[temp][random.randint(0,len(allData[temp])-1)])
+							trainingDataY.append(0)
+					self.networks[i].fit(trainingDataX, trainingDataY)
 		elif self.type == "mono":
 			for i in range(len(data)):
 				for j in range(int(len(data[i]) * percentToUse/100)):
@@ -123,31 +140,50 @@ class Guesser(object):
 
 	def save(self):
 		pickle.dump(self, open(self.name, "wb"))
-	
+
 def buildData():
+	data = []
+	if dataType == "all":
+		data.append(vectorize("hog"))
+		data.append(vectorize("tensor"))
+		data.append(vectorize("xcanny"))
+		data.append(vectorize("blueBoost"))
+	elif dataType == "xcanny":
+		data = vectorize("xcanny")
+	elif dataType == "hog":
+		data = vectorize("hog")
+	elif dataType == "tensor":
+		data = vectorize("tensor")
+	elif dataType == "canny":
+		data = vectorize("canny")
+	elif dataType == "blueBoost":
+		data = vectorize("blueBoost")
+	return data
+
+def vectorize(allData):
 	shapeM = np.array([[[0,0,1]]*50]*50)
 	data = []
 	for i in range(ord(endLetter)-ord(startLetter)+1):
 		data.append([])
-	for path, dirs, files in os.walk("./BlueHandAlphabet/Cropped"):
+	for path, dirs, files in os.walk("./NeuralNetwork/BlueHandAlphabet/Cropped"):
 		if ord(path[-1]) >= ord(startLetter) and ord(path[-1]) <= ord(endLetter):
 			for fname in files:
-				if dataType == "xcanny":
+				if allData == "xcanny":
 					img = canny(rgb2gray(imread(path + "/" + fname)))
 					img1D = []
 					for i in range(len(img)):
 						for j in range(len(img[i])):
 							img1D.append(img[i][j])
 					data[ord(path[-1]) - ord(startLetter)].append(img1D)
-				elif dataType == "hog":
+				elif allData == "hog":
 					data[ord(path[-1]) - ord(startLetter)].append(hog(rgb2gray(imread(path + "/" + fname))))
-				elif dataType == "canny":
+				elif allData == "canny":
 					img = canny(rgb2gray(imread(path + "/" + fname)))
 					img1D = []
 					for i in range(len(img)):
 						img1D.append(float(np.sum(np.array(img[i])))/float(len(img[i])))
 					data[ord(path[-1]) - ord(startLetter)].append(img1D)
-				elif dataType == "tensor":
+				elif allData == "tensor":
 					img1D = []
 					Axx, Axy, Ayy = structure_tensor(rgb2gray(imread(path + "/" + fname)), sigma=0.1)
 					img2D = structure_tensor_eigvals(Axx, Axy, Ayy)[0]
@@ -155,7 +191,7 @@ def buildData():
 						for el in obj:
 							img1D.append(el)
 					data[ord(path[-1]) - ord(startLetter)].append(img1D)
-				elif dataType == "blueBoost":
+				elif allData == "blueBoost":
 					temp = imread(path + "/" + fname)*shapeM
 					max = np.amax(temp)
 					temp = temp / np.array([[[1,1,float(max)]]*50]*50)
@@ -163,6 +199,7 @@ def buildData():
 				else:
 					print("Invalid data type, exiting")
 					exit()
+	#print(data)
 	return data
 
 if __name__ == "__main__":
@@ -184,49 +221,56 @@ if __name__ == "__main__":
 		maxMins.append([0.0, 10000.0])
 	"""
 	data = buildData()
-	
+	#print(data)
 	# ---------------------------------------------
 	# Construct the letter guesser for this session
 	# ---------------------------------------------
-	if guesserConstruction == "load":
-		g = pickle.load(open("./" + guesserName, "rb"))
-	elif guesserConstruction == "new":
-		g = Guesser(type=guesserType, name=guesserName)
-		g.train()
+	if dataType == "all":
+		nets = [Guesser(name="hogNet"), Guesser(name="tensorNet"), Guesser(name="xcannyNet"), Guesser(name="blueBoostNet")]
+		for i in range(len(nets)):
+			print("Training " + nets[i].name)
+			nets[i].train(allData=data[i])
+			nets[i].save()
 	else:
-		print(guesserConstruction + " is an invalid value for guesserConstruction.")
-		sys.exit(1)
-	
-	# ------------------------------------------------------------
-	# Save the network for future use (this barely takes any time)
-	# ------------------------------------------------------------
-	g.save()
-	
-	# ----------------------------------
-	# Check the accuracy of your network
-	# ----------------------------------
-	
-	for i in range(len(data)):
-		print(chr(i + ord('A')) + ": " + str(g.predict([data[i][i]])))
-	
-	for i in range(len(data)):
-		temp = 0
-		for j in range(len(data[i])):
-			if g.type == "mono" and g.predict([data[i][j]])[0] == i:
-				temp += 1
-			elif g.type == "multi" and i in g.predict([data[i][j]]):
-				temp += 1
-		print(chr(i + ord('A')) + ": " + str(temp/len(data[i])))
-	"""
-	
-	data = []
-	img = imread("./TestC1.jpg")
-	img = rgb2gray(resize(img, (200,200),anti_aliasing=True))
-	for ent in canny(img):
-		temp = 0
-		for boo in ent:
-			if boo:
-				temp += 1
-		data.append(float(temp)/float(len(ent)))
-	print(g.predict([data]))
-	"""
+		if guesserConstruction == "load":
+			g = pickle.load(open("./" + guesserName, "rb"))
+		elif guesserConstruction == "new":
+			g = Guesser(type=guesserType, name=guesserName)
+			g.train()
+		else:
+			print(guesserConstruction + " is an invalid value for guesserConstruction.")
+			sys.exit(1)
+		
+		# ------------------------------------------------------------
+		# Save the network for future use (this barely takes any time)
+		# ------------------------------------------------------------
+		g.save()
+		
+		# ----------------------------------
+		# Check the accuracy of your network
+		# ----------------------------------
+		
+		for i in range(len(data)):
+			print(chr(i + ord('A')) + ": " + str(g.predict([data[i][i]])))
+		
+		for i in range(len(data)):
+			temp = 0
+			for j in range(len(data[i])):
+				if g.type == "mono" and g.predict([data[i][j]])[0] == i:
+					temp += 1
+				elif g.type == "multi" and i in g.predict([data[i][j]]):
+					temp += 1
+			print(chr(i + ord('A')) + ": " + str(temp/len(data[i])))
+		"""
+		
+		data = []
+		img = imread("./TestC1.jpg")
+		img = rgb2gray(resize(img, (200,200),anti_aliasing=True))
+		for ent in canny(img):
+			temp = 0
+			for boo in ent:
+				if boo:
+					temp += 1
+			data.append(float(temp)/float(len(ent)))
+		print(g.predict([data]))
+		"""
