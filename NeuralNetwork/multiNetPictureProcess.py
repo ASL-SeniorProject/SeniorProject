@@ -26,7 +26,7 @@ def predict(index, name, img):
 
 def isolateHand(iname, sourcedir, targetdir):
 	#print(os.getcwd())
-	img = rgba2rgb(imread(sourcedir + "/" + iname + ".jpg"))
+	img = imread(sourcedir + "/" + iname + ".jpg")
 	netNames = ["gloveNet", "gloveNet2", "gloveNet3", "gloveNet4", "gloveNet5", "gloveNet6"]
 
 	print("Setting up environment")

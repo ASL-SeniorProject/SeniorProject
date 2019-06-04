@@ -9,7 +9,7 @@ from NeuralNetwork.letterGuesser3 import *
 from NeuralNetwork.multiNetPictureProcess import *
 from NeuralNetwork.TrainGloveNet import *
 from NeuralNetwork.fakeProduction import *
-from subprocess import Popen
+from subprocess import Popen, check_output
 import string
 import math
 import json
@@ -87,17 +87,24 @@ def makeWords(wSoFar, letters):
         makeWords(wSoFar + chr(ord('A') + c), letters[1:])
 @app.route('/predict')
 def predictLetter():
-	print("Call Nick's nueral net")
 	guessedLetters = processAndPredict()
 	makeWords('', guessedLetters)
 	global collection
-	print("Add its prediction")
-	print("Process all output with NLP")
-	print("Update message with the new output")
 	global message
 	message = ''
+	endWord = []
 	for w in collection:
-		message += w + " "
+		#words = str(check_output(['java', '-jar',  'Checker-1.0-SNAPSHOT-jar-with-dependencies.jar', w])).split('{')[1:]
+		message = str(check_output(['java', '-jar',  'Checker-1.0-SNAPSHOT-jar-with-dependencies.jar', w]))
+		#message = str(words)
+		"""
+		words = words[0].split('}')[0].split(' ')
+		if words[0][-1] == ',':
+			endWord.append(words[0][:-1])
+		else:
+			endWord.append(words[0])
+		"""	
+	#message = endWord[0]
 	p = Popen("clean.bat", cwd=r""+os.getcwd())
 if __name__ == '__main__':
 	app.run(host= '0.0.0.0', port=5000)
